@@ -81,7 +81,7 @@ if (!lieuDepart || !lieuArrivee || !dateDepart || !heureDepart || !typeTrajet ||
     });
   } catch (erreur) {
     console.error("Erreur création trajet :", erreur);
-    return reponse.status(500).json({ erreur: "Impossible de créer le trajet.", detail: erreur?.message });
+    return reponse.status(500).json({ erreur: "Impossible de créer le trajet.", detail: String(erreur), code: erreur?.code });
   }
 });
 
