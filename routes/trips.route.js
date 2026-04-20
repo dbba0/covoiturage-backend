@@ -50,8 +50,9 @@ if (!lieuDepart || !lieuArrivee || !dateDepart || !heureDepart || !typeTrajet ||
         nb_places_total, nb_places_restantes, prix_par_place,
         options_bagages, options_places_arriere, options_autres,
         mode_reservation, description,
-        modele_vehicule, couleur_vehicule, annee_vehicule, plaque_immatriculation
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        modele_vehicule, couleur_vehicule, annee_vehicule, plaque_immatriculation,
+        statut
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         conducteurId,
         lieuDepart, lieuArrivee,
