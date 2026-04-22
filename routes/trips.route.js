@@ -178,6 +178,25 @@ router.put("/:id", verifieToken, async (requete, reponse) => {
 
     const trajetMisAJour = await db.get("SELECT * FROM trips WHERE id = ?", [trajetId]);
 
+    // 🔔 Notifier les passagers avec une réservation acceptée
+    const passagersActifs = await db.all(
+      `SELECT passager_id FROM reservations
+       WHERE trajet_id = ? AND statut = 'acceptee'`,
+      [trajetId]
+    );
+
+    for (const { passager_id } of passagersActifs) {
+      await db.run(
+        `INSERT INTO notifications (user_id, type, message)
+         VALUES (?, ?, ?)`,
+        [
+          passager_id,
+          "trajet_modifie",
+          `Le trajet ${trajetMisAJour.lieu_depart} → ${trajetMisAJour.lieu_arrivee} a été modifié. Nouvelle date : ${trajetMisAJour.date_depart} à ${trajetMisAJour.heure_depart}.`,
+        ]
+      );
+    }
+
     return reponse.json({
       message: "Trajet mis à jour avec succès.",
       trajet: trajetMisAJour,
@@ -214,6 +233,13 @@ router.patch("/:id/annuler", verifieToken, async (requete, reponse) => {
       return reponse.status(400).json({ erreur: "Ce trajet est déjà annulé." });
     }
 
+    // Récupérer les passagers affectés avant d'annuler
+    const passagersAffectes = await db.all(
+      `SELECT passager_id FROM reservations
+       WHERE trajet_id = ? AND statut IN ('en_attente', 'acceptee')`,
+      [trajetId]
+    );
+
     // Annuler le trajet
     await db.run("UPDATE trips SET statut = 'annule' WHERE id = ?", [trajetId]);
 
@@ -223,6 +249,19 @@ router.patch("/:id/annuler", verifieToken, async (requete, reponse) => {
        WHERE trajet_id = ? AND statut IN ('en_attente', 'acceptee')`,
       [trajetId]
     );
+
+    // 🔔 Notifier chaque passager affecté
+    for (const { passager_id } of passagersAffectes) {
+      await db.run(
+        `INSERT INTO notifications (user_id, type, message)
+         VALUES (?, ?, ?)`,
+        [
+          passager_id,
+          "trajet_annule",
+          `Le trajet ${trajet.lieu_depart} → ${trajet.lieu_arrivee} du ${trajet.date_depart} a été annulé par le conducteur.`,
+        ]
+      );
+    }
 
     return reponse.json({
       message: "Trajet annulé. Toutes les réservations associées ont été annulées.",
